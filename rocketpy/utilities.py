@@ -11,10 +11,6 @@ from .mathutils.function import Function
 from .rocket.aero_surface import TrapezoidalFins
 from .simulation.flight import Flight
 
-#hello
-
-
-
 # TODO: Needs tests
 def compute_cd_s_from_drop_test(
     terminal_velocity, rocket_mass, air_density=1.225, g=9.80665
