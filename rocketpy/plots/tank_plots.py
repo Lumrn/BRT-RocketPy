@@ -30,6 +30,8 @@ class _TankPlots:
         self.name = tank.name
         self.geometry = tank.geometry
 
+        return None
+
     def _generate_tank(self, translate=(0, 0), csys=1):
         """Generates a matplotlib patch object that represents the tank.
 
@@ -74,7 +76,7 @@ class _TankPlots:
         -------
         None
         """
-        _, ax = plt.subplots(facecolor="#EEEEEE")
+        fig, ax = plt.subplots(facecolor="#EEEEEE")
 
         ax.add_patch(self._generate_tank())
 
@@ -98,3 +100,5 @@ class _TankPlots:
         -------
         None
         """
+
+        return None

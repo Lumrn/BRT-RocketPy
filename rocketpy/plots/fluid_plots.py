@@ -23,6 +23,8 @@ class _FluidPlots:
 
         self.fluid = fluid
 
+        return None
+
     def all(self):
         """Prints out all graphs available about the Fluid. It simply calls
         all the other plotter methods in this class.
@@ -31,3 +33,5 @@ class _FluidPlots:
         ------
         None
         """
+
+        return None

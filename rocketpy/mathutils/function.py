@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """ The mathutils/function.py is a rocketpy module totally dedicated to function
 operations, including interpolation, extrapolation, integration, differentiation
 and more. This is a core class of our package, and should be maintained
@@ -17,14 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import integrate, linalg, optimize
 
-# Numpy 1.x compatibility,
-# TODO: remove these lines when all dependencies support numpy>=2.0.0
-if np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
-    from numpy import trapezoid  # pragma: no cover
-else:
-    from numpy import trapz as trapezoid  # pragma: no cover
-
-NUMERICAL_TYPES = (float, int, complex, np.integer, np.floating)
+NUMERICAL_TYPES = (float, int, complex, np.ndarray, np.integer, np.floating)
 INTERPOLATION_TYPES = {
     "linear": 0,
     "polynomial": 1,
@@ -35,7 +27,7 @@ INTERPOLATION_TYPES = {
 EXTRAPOLATION_TYPES = {"zero": 0, "natural": 1, "constant": 2}
 
 
-class Function:  # pylint: disable=too-many-public-methods
+class Function:
     """Class converts a python function or a data sequence into an object
     which can be handled more naturally, enabling easy interpolation,
     extrapolation, plotting and algebra.
@@ -169,7 +161,7 @@ class Function:  # pylint: disable=too-many-public-methods
         self.__outputs__ = self.__validate_outputs(outputs)
         return self
 
-    def set_source(self, source):  # pylint: disable=too-many-statements
+    def set_source(self, source):
         """Sets the data source for the function, defining how the function
         produces output from a given input.
 
@@ -337,7 +329,7 @@ class Function:  # pylint: disable=too-many-public-methods
             self.__set_extrapolation_func()
         return self
 
-    def __set_interpolation_func(self):  # pylint: disable=too-many-statements
+    def __set_interpolation_func(self):
         """Defines interpolation function used by the Function. Each
         interpolation method has its own function with exception of shepard,
         which has its interpolation/extrapolation function defined in
@@ -346,9 +338,7 @@ class Function:  # pylint: disable=too-many-public-methods
         interpolation = INTERPOLATION_TYPES[self.__interpolation__]
         if interpolation == 0:  # linear
 
-            def linear_interpolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def linear_interpolation(x, x_min, x_max, x_data, y_data, coeffs):
                 x_interval = bisect_left(x_data, x)
                 x_left = x_data[x_interval - 1]
                 y_left = y_data[x_interval - 1]
@@ -360,18 +350,14 @@ class Function:  # pylint: disable=too-many-public-methods
 
         elif interpolation == 1:  # polynomial
 
-            def polynomial_interpolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def polynomial_interpolation(x, x_min, x_max, x_data, y_data, coeffs):
                 return np.sum(coeffs * x ** np.arange(len(coeffs)))
 
             self._interpolation_func = polynomial_interpolation
 
         elif interpolation == 2:  # akima
 
-            def akima_interpolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def akima_interpolation(x, x_min, x_max, x_data, y_data, coeffs):
                 x_interval = bisect_left(x_data, x)
                 x_interval = x_interval if x_interval != 0 else 1
                 a = coeffs[4 * x_interval - 4 : 4 * x_interval]
@@ -381,9 +367,7 @@ class Function:  # pylint: disable=too-many-public-methods
 
         elif interpolation == 3:  # spline
 
-            def spline_interpolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def spline_interpolation(x, x_min, x_max, x_data, y_data, coeffs):
                 x_interval = bisect_left(x_data, x)
                 x_interval = max(x_interval, 1)
                 a = coeffs[:, x_interval - 1]
@@ -395,7 +379,7 @@ class Function:  # pylint: disable=too-many-public-methods
         elif interpolation == 4:  # shepard does not use interpolation function
             self._interpolation_func = None
 
-    def __set_extrapolation_func(self):  # pylint: disable=too-many-statements
+    def __set_extrapolation_func(self):
         """Defines extrapolation function used by the Function. Each
         extrapolation method has its own function. The function is stored in
         the attribute _extrapolation_func."""
@@ -407,18 +391,14 @@ class Function:  # pylint: disable=too-many-public-methods
 
         elif extrapolation == 0:  # zero
 
-            def zero_extrapolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def zero_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                 return 0
 
             self._extrapolation_func = zero_extrapolation
         elif extrapolation == 1:  # natural
             if interpolation == 0:  # linear
 
-                def natural_extrapolation(
-                    x, x_min, x_max, x_data, y_data, coeffs
-                ):  # pylint: disable=unused-argument
+                def natural_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                     x_interval = 1 if x < x_min else -1
                     x_left = x_data[x_interval - 1]
                     y_left = y_data[x_interval - 1]
@@ -428,24 +408,18 @@ class Function:  # pylint: disable=too-many-public-methods
 
             elif interpolation == 1:  # polynomial
 
-                def natural_extrapolation(
-                    x, x_min, x_max, x_data, y_data, coeffs
-                ):  # pylint: disable=unused-argument
+                def natural_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                     return np.sum(coeffs * x ** np.arange(len(coeffs)))
 
             elif interpolation == 2:  # akima
 
-                def natural_extrapolation(
-                    x, x_min, x_max, x_data, y_data, coeffs
-                ):  # pylint: disable=unused-argument
+                def natural_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                     a = coeffs[:4] if x < x_min else coeffs[-4:]
                     return a[3] * x**3 + a[2] * x**2 + a[1] * x + a[0]
 
             elif interpolation == 3:  # spline
 
-                def natural_extrapolation(
-                    x, x_min, x_max, x_data, y_data, coeffs
-                ):  # pylint: disable=unused-argument
+                def natural_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                     if x < x_min:
                         a = coeffs[:, 0]
                         x = x - x_data[0]
@@ -457,9 +431,7 @@ class Function:  # pylint: disable=too-many-public-methods
             self._extrapolation_func = natural_extrapolation
         elif extrapolation == 2:  # constant
 
-            def constant_extrapolation(
-                x, x_min, x_max, x_data, y_data, coeffs
-            ):  # pylint: disable=unused-argument
+            def constant_extrapolation(x, x_min, x_max, x_data, y_data, coeffs):
                 return y_data[0] if x < x_min else y_data[-1]
 
             self._extrapolation_func = constant_extrapolation
@@ -577,9 +549,9 @@ class Function:  # pylint: disable=too-many-public-methods
             func.set_interpolation(interpolation)
             func.set_extrapolation(extrapolation)
         elif func.__dom_dim__ == 2:
-            lower = 2 * [lower] if isinstance(lower, NUMERICAL_TYPES) else lower
-            upper = 2 * [upper] if isinstance(upper, NUMERICAL_TYPES) else upper
-            sam = 2 * [samples] if isinstance(samples, NUMERICAL_TYPES) else samples
+            lower = 2 * [lower] if isinstance(lower, (int, float)) else lower
+            upper = 2 * [upper] if isinstance(upper, (int, float)) else upper
+            sam = 2 * [samples] if isinstance(samples, (int, float)) else samples
             # Create nodes to evaluate function
             xs = np.linspace(lower[0], upper[0], sam[0])
             ys = np.linspace(lower[1], upper[1], sam[1])
@@ -857,26 +829,26 @@ class Function:  # pylint: disable=too-many-public-methods
         ...    [(0, 0), (1, 1), (1.5, 2.25), (2, 4), (2.5, 6.25), (3, 9), (4, 16)]
         ... )
         >>> f3.get_value(2)
-        np.float64(4.0)
+        4.0
         >>> f3.get_value(2.5)
-        np.float64(6.25)
+        6.25
         >>> f3.get_value([1, 2, 3])
-        [np.float64(1.0), np.float64(4.0), np.float64(9.0)]
+        [1.0, 4.0, 9.0]
         >>> f3.get_value([1, 2.5, 4.0])
-        [np.float64(1.0), np.float64(6.25), np.float64(16.0)]
+        [1.0, 6.25, 16.0]
 
         Testing with ndarray source (2 dimensions):
         >>> f4 = Function(
         ...    [(0, 0, 0), (1, 1, 1), (1, 2, 2), (2, 4, 8), (3, 9, 27)]
         ... )
         >>> f4.get_value(1, 1)
-        np.float64(1.0)
+        1.0
         >>> f4.get_value(2, 4)
-        np.float64(8.0)
+        8.0
         >>> abs(f4.get_value(1, 1.5) - 1.5) < 1e-2  # the interpolation is not perfect
-        np.True_
+        True
         >>> f4.get_value(3, 9)
-        np.float64(27.0)
+        27.0
         """
         if len(args) != self.__dom_dim__:
             raise ValueError(
@@ -888,7 +860,7 @@ class Function:  # pylint: disable=too-many-public-methods
             # if the function is 1-D:
             if self.__dom_dim__ == 1:
                 # if the args is a simple number (int or float)
-                if isinstance(args[0], NUMERICAL_TYPES):
+                if isinstance(args[0], (int, float, complex)):
                     return self.source(args[0])
                 # if the arguments are iterable, we map and return a list
                 if isinstance(args[0], Iterable):
@@ -897,7 +869,7 @@ class Function:  # pylint: disable=too-many-public-methods
             # if the function is n-D:
             else:
                 # if each arg is a simple number (int or float)
-                if all(isinstance(arg, NUMERICAL_TYPES) for arg in args):
+                if all(isinstance(arg, (int, float, complex)) for arg in args):
                     return self.source(*args)
                 # if each arg is iterable, we map and return a list
                 if all(isinstance(arg, Iterable) for arg in args):
@@ -908,7 +880,7 @@ class Function:  # pylint: disable=too-many-public-methods
 
         # Returns value for other interpolation type
         else:  # interpolation is "polynomial", "spline", "akima" or "linear"
-            if isinstance(args[0], NUMERICAL_TYPES):
+            if isinstance(args[0], (int, float, complex, np.integer)):
                 args = [list(args)]
 
         x = list(args[0])
@@ -1191,7 +1163,7 @@ class Function:  # pylint: disable=too-many-public-methods
             elif self.__dom_dim__ == 2:
                 self.plot_2d(*args, **kwargs)
             else:
-                print("Error: Only functions with 1D or 2D domains can be plotted.")
+                print("Error: Only functions with 1D or 2D domains are plottable!")
 
     def plot1D(self, *args, **kwargs):
         """Deprecated method, use Function.plot_1d instead."""
@@ -1203,7 +1175,7 @@ class Function:  # pylint: disable=too-many-public-methods
         )
         return self.plot_1d(*args, **kwargs)
 
-    def plot_1d(  # pylint: disable=too-many-statements
+    def plot_1d(
         self,
         lower=None,
         upper=None,
@@ -1296,7 +1268,7 @@ class Function:  # pylint: disable=too-many-public-methods
         )
         return self.plot_2d(*args, **kwargs)
 
-    def plot_2d(  # pylint: disable=too-many-statements
+    def plot_2d(
         self,
         lower=None,
         upper=None,
@@ -1358,9 +1330,9 @@ class Function:  # pylint: disable=too-many-public-methods
         if callable(self.source):
             # Determine boundaries
             lower = [0, 0] if lower is None else lower
-            lower = 2 * [lower] if isinstance(lower, NUMERICAL_TYPES) else lower
+            lower = 2 * [lower] if isinstance(lower, (int, float)) else lower
             upper = [10, 10] if upper is None else upper
-            upper = 2 * [upper] if isinstance(upper, NUMERICAL_TYPES) else upper
+            upper = 2 * [upper] if isinstance(upper, (int, float)) else upper
         else:
             # Determine boundaries
             x_data = self.x_array
@@ -1368,9 +1340,9 @@ class Function:  # pylint: disable=too-many-public-methods
             x_min, x_max = x_data.min(), x_data.max()
             y_min, y_max = y_data.min(), y_data.max()
             lower = [x_min, y_min] if lower is None else lower
-            lower = 2 * [lower] if isinstance(lower, NUMERICAL_TYPES) else lower
+            lower = 2 * [lower] if isinstance(lower, (int, float)) else lower
             upper = [x_max, y_max] if upper is None else upper
-            upper = 2 * [upper] if isinstance(upper, NUMERICAL_TYPES) else upper
+            upper = 2 * [upper] if isinstance(upper, (int, float)) else upper
             # Plot data points if force_data = True
             if force_data:
                 axes.scatter(x_data, y_data, self.source[:, -1])
@@ -1385,6 +1357,7 @@ class Function:  # pylint: disable=too-many-public-methods
         )
         z_min, z_max = z.min(), z.max()
         color_map = plt.colormaps[cmap]
+        norm = plt.Normalize(z_min, z_max)
 
         # Plot function
         if disp_type == "surface":
@@ -1419,7 +1392,7 @@ class Function:  # pylint: disable=too-many-public-methods
         plt.show()
 
     @staticmethod
-    def compare_plots(  # pylint: disable=too-many-statements
+    def compare_plots(
         plot_list,
         lower=None,
         upper=None,
@@ -1540,8 +1513,7 @@ class Function:  # pylint: disable=too-many-public-methods
                     ax.scatter(points[0], points[1], marker="o")
 
         # Setup legend
-        if any(plot[1] for plot in plots):
-            ax.legend(loc="best", shadow=True)
+        ax.legend(loc="best", shadow=True)
 
         # Turn on grid and set title and axis
         plt.grid(True)
@@ -1755,6 +1727,7 @@ class Function:  # pylint: disable=too-many-public-methods
                         "Comparison not supported between two instances of "
                         "the Function class with callable sources."
                     ) from exc
+        return None
 
     def __le__(self, other):
         """Less than or equal to comparison operator. It can be used to
@@ -1808,6 +1781,7 @@ class Function:  # pylint: disable=too-many-public-methods
                         "Comparison not supported between two instances of "
                         "the Function class with callable sources."
                     ) from exc
+        return None
 
     def __gt__(self, other):
         """Greater than comparison operator. It can be used to compare a
@@ -1854,7 +1828,7 @@ class Function:  # pylint: disable=too-many-public-methods
         return ~self.__ge__(other)
 
     # Define all possible algebraic operations
-    def __add__(self, other):  # pylint: disable=too-many-statements
+    def __add__(self, other):
         """Sums a Function object and 'other', returns a new Function
         object which gives the result of the sum. Only implemented for
         1D domains.
@@ -1901,9 +1875,7 @@ class Function:  # pylint: disable=too-many-public-methods
                 return Function(lambda x: (self.get_value_opt(x) + other(x)))
         # If other is Float except...
         except AttributeError:
-            if isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(
-                other
-            ):
+            if isinstance(other, NUMERICAL_TYPES):
                 # Check if Function object source is array or callable
                 if isinstance(self.source, np.ndarray):
                     # Operate on grid values
@@ -2025,9 +1997,7 @@ class Function:  # pylint: disable=too-many-public-methods
             source = np.column_stack((self.x_array, self.y_array * other.y_array))
             outputs = f"({self.__outputs__[0]}*{other.__outputs__[0]})"
             return Function(source, inputs, outputs, interp, extrap)
-        elif isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(
-            other
-        ):
+        elif isinstance(other, NUMERICAL_TYPES):
             if not self_source_is_array:
                 return Function(lambda x: (self.get_value_opt(x) * other), inputs)
             source = np.column_stack((self.x_array, np.multiply(self.y_array, other)))
@@ -2061,7 +2031,7 @@ class Function:  # pylint: disable=too-many-public-methods
         """
         return self * other
 
-    def __truediv__(self, other):  # pylint: disable=too-many-statements
+    def __truediv__(self, other):
         """Divides a Function object and returns a new Function object
         which gives the result of the division. Only implemented for 1D
         domains.
@@ -2110,9 +2080,7 @@ class Function:  # pylint: disable=too-many-public-methods
                 return Function(lambda x: (self.get_value_opt(x) / other(x)))
         # If other is Float except...
         except AttributeError:
-            if isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(
-                other
-            ):
+            if isinstance(other, NUMERICAL_TYPES):
                 # Check if Function object source is array or callable
                 if isinstance(self.source, np.ndarray):
                     # Operate on grid values
@@ -2151,7 +2119,7 @@ class Function:  # pylint: disable=too-many-public-methods
             A Function object which gives the result of other(x)/self(x).
         """
         # Check if Function object source is array and other is float
-        if isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(other):
+        if isinstance(other, NUMERICAL_TYPES):
             if isinstance(self.source, np.ndarray):
                 # Operate on grid values
                 ys = other / self.y_array
@@ -2171,7 +2139,7 @@ class Function:  # pylint: disable=too-many-public-methods
         elif callable(other):
             return Function(lambda x: (other(x) / self.get_value_opt(x)))
 
-    def __pow__(self, other):  # pylint: disable=too-many-statements
+    def __pow__(self, other):
         """Raises a Function object to the power of 'other' and
         returns a new Function object which gives the result. Only
         implemented for 1D domains.
@@ -2219,9 +2187,7 @@ class Function:  # pylint: disable=too-many-public-methods
                 return Function(lambda x: (self.get_value_opt(x) ** other(x)))
         # If other is Float except...
         except AttributeError:
-            if isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(
-                other
-            ):
+            if isinstance(other, NUMERICAL_TYPES):
                 # Check if Function object source is array or callable
                 if isinstance(self.source, np.ndarray):
                     # Operate on grid values
@@ -2260,7 +2226,7 @@ class Function:  # pylint: disable=too-many-public-methods
             A Function object which gives the result of other(x)**self(x).
         """
         # Check if Function object source is array and other is float
-        if isinstance(other, NUMERICAL_TYPES) or self.__is_single_element_array(other):
+        if isinstance(other, NUMERICAL_TYPES):
             if isinstance(self.source, np.ndarray):
                 # Operate on grid values
                 ys = other**self.y_array
@@ -2300,24 +2266,7 @@ class Function:  # pylint: disable=too-many-public-methods
         """
         return self.compose(other)
 
-    def __mod__(self, other):
-        """Operator % as an alias for modulo operation."""
-        if callable(self.source):
-            return Function(lambda x: self.source(x) % other)
-        elif isinstance(self.source, np.ndarray) and isinstance(other, NUMERICAL_TYPES):
-            return Function(
-                np.column_stack((self.x_array, self.y_array % other)),
-                self.__inputs__,
-                self.__outputs__,
-                self.__interpolation__,
-                self.__extrapolation__,
-            )
-        raise NotImplementedError(
-            "Modulo operation not implemented for operands of type "
-            f"'{type(self)}' and '{type(other)}'."
-        )
-
-    def integral(self, a, b, numerical=False):  # pylint: disable=too-many-statements
+    def integral(self, a, b, numerical=False):
         """Evaluate a definite integral of a 1-D Function in the interval
         from a to b.
 
@@ -2426,7 +2375,7 @@ class Function:  # pylint: disable=too-many-public-methods
                     # self.__extrapolation__ = 'zero'
                     pass
         elif self.__interpolation__ == "linear" and numerical is False:
-            # Integrate from a to b using np.trapezoid
+            # Integrate from a to b using np.trapz
             x_data = self.x_array
             y_data = self.y_array
             # Get data in interval
@@ -2445,7 +2394,8 @@ class Function:  # pylint: disable=too-many-public-methods
                 y_integration_data = np.concatenate(([self(a)], y_integration_data))
                 x_integration_data = np.concatenate((x_integration_data, [b]))
                 y_integration_data = np.concatenate((y_integration_data, [self(b)]))
-            ans = trapezoid(y_integration_data, x_integration_data)
+            # Integrate using np.trapz
+            ans = np.trapz(y_integration_data, x_integration_data)
         else:
             # Integrate numerically
             ans, _ = integrate.quad(self, a, b, epsabs=1e-4, epsrel=1e-3, limit=1000)
@@ -2506,7 +2456,7 @@ class Function:  # pylint: disable=too-many-public-methods
             return float(self.get_value_opt(x + dx * 1j).imag / dx)
         else:
             raise NotImplementedError(
-                "Only 1st order derivatives are supported yet. Set order=1."
+                "Only 1st order derivatives are supported yet. " "Set order=1."
             )
 
     def identity_function(self):
@@ -2631,8 +2581,8 @@ class Function:  # pylint: disable=too-many-public-methods
             return len(distinct_map) == len(x_data_distinct) == len(y_data_distinct)
         else:
             raise TypeError(
-                "`isbijective()` method only supports Functions whose "
-                "source is an array."
+                "Only Functions whose source is a list of points can be "
+                "checked for bijectivity."
             )
 
     def is_strictly_bijective(self):
@@ -2656,16 +2606,16 @@ class Function:  # pylint: disable=too-many-public-methods
         Examples
         --------
         >>> f = Function([[0, 0], [1, 1], [2, 4]])
-        >>> f.isbijective() == True
+        >>> f.isbijective()
         True
-        >>> f.is_strictly_bijective() == True
-        np.True_
+        >>> f.is_strictly_bijective()
+        True
 
         >>> f = Function([[-1, 1], [0, 0], [1, 1], [2, 4]])
         >>> f.isbijective()
         False
         >>> f.is_strictly_bijective()
-        np.False_
+        False
 
         A Function which is not "strictly" bijective, but is bijective, can be
         constructed as x^2 defined at -1, 0 and 2.
@@ -2674,7 +2624,7 @@ class Function:  # pylint: disable=too-many-public-methods
         >>> f.isbijective()
         True
         >>> f.is_strictly_bijective()
-        np.False_
+        False
         """
         if isinstance(self.source, np.ndarray):
             # Assuming domain is sorted, range must also be
@@ -2684,8 +2634,8 @@ class Function:  # pylint: disable=too-many-public-methods
             return np.all(y_data_diff >= 0) or np.all(y_data_diff <= 0)
         else:
             raise TypeError(
-                "`is_strictly_bijective()` method only supports Functions "
-                "whose source is an array."
+                "Only Functions whose source is a list of points can be "
+                "checked for bijectivity."
             )
 
     def inverse_function(self, approx_func=None, tol=1e-4):
@@ -2695,9 +2645,8 @@ class Function:  # pylint: disable=too-many-public-methods
         and only if F is bijective. Makes the domain the range and the range
         the domain.
 
-        If the Function is given by a list of points, the method
-        `is_strictly_bijective()` is called and an error is raised if the
-        Function is not bijective.
+        If the Function is given by a list of points, its bijectivity is
+        checked and an error is raised if it is not bijective.
         If the Function is given by a function, its bijection is not
         checked and may lead to inaccuracies outside of its bijective region.
 
@@ -2857,7 +2806,7 @@ class Function:  # pylint: disable=too-many-public-methods
         if isinstance(self.source, np.ndarray) and isinstance(func.source, np.ndarray):
             # Perform bounds check for composition
             if not extrapolate:
-                if func.min < self.x_initial or func.max > self.x_final:
+                if (func.min < self.x_initial) or (func.max > self.x_final):
                     raise ValueError(
                         f"Input Function image {func.min, func.max} must be within "
                         f"the domain of the Function {self.x_initial, self.x_final}."
@@ -2951,12 +2900,8 @@ class Function:  # pylint: disable=too-many-public-methods
             file.write(header_line + newline)
             np.savetxt(file, data_points, fmt=fmt, delimiter=delimiter, newline=newline)
 
-    @staticmethod
-    def __is_single_element_array(var):
-        return isinstance(var, np.ndarray) and var.size == 1
-
     # Input validators
-    def __validate_source(self, source):  # pylint: disable=too-many-statements
+    def __validate_source(self, source):
         """Used to validate the source parameter for creating a Function object.
 
         Parameters
@@ -3001,7 +2946,7 @@ class Function:  # pylint: disable=too-many-public-methods
                     "Could not read the csv or txt file to create Function source."
                 ) from e
 
-        if isinstance(source, (list, np.ndarray)):
+        if isinstance(source, list) or isinstance(source, np.ndarray):
             # Triggers an error if source is not a list of numbers
             source = np.array(source, dtype=np.float64)
 
@@ -3012,7 +2957,7 @@ class Function:  # pylint: disable=too-many-public-methods
                 )
             return source
 
-        if isinstance(source, NUMERICAL_TYPES):
+        if isinstance(source, (int, float)):
             # Convert number source into vectorized lambda function
             temp = 1 * source
 
@@ -3052,7 +2997,7 @@ class Function:  # pylint: disable=too-many-public-methods
             )
         if self.__dom_dim__ > 1:
             if inputs is None:
-                return [f"Input {i + 1}" for i in range(self.__dom_dim__)]
+                return [f"Input {i+1}" for i in range(self.__dom_dim__)]
             if isinstance(inputs, list):
                 if len(inputs) == self.__dom_dim__ and all(
                     isinstance(i, str) for i in inputs
@@ -3227,7 +3172,7 @@ class PiecewiseFunction(Function):
         output_data = []
         for key in sorted(source.keys()):
             i = np.linspace(key[0], key[1], datapoints)
-            i = i[~np.isin(i, input_data)]
+            i = i[~np.in1d(i, input_data)]
             input_data = np.concatenate((input_data, i))
 
             f = Function(source[key])
@@ -3242,7 +3187,7 @@ class PiecewiseFunction(Function):
         )
 
 
-def funcify_method(*args, **kwargs):  # pylint: disable=too-many-statements
+def funcify_method(*args, **kwargs):
     """Decorator factory to wrap methods as Function objects and save them as
     cached properties.
 

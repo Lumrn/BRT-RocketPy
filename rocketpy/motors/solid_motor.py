@@ -181,7 +181,6 @@ class SolidMotor(Motor):
         'akima' and 'linear'. Default is "linear".
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         thrust_source,
@@ -340,6 +339,7 @@ class SolidMotor(Motor):
         # Initialize plots and prints object
         self.prints = _SolidMotorPrints(self)
         self.plots = _SolidMotorPlots(self)
+        return None
 
     @funcify_method("Time (s)", "Mass (kg)")
     def propellant_mass(self):
@@ -448,7 +448,6 @@ class SolidMotor(Motor):
         center_of_mass = np.full_like(time_source, self.grains_center_of_mass_position)
         return np.column_stack((time_source, center_of_mass))
 
-    # pylint: disable=too-many-arguments, too-many-statements
     def evaluate_geometry(self):
         """Calculates grain inner radius and grain height as a function of time
         by assuming that every propellant mass burnt is exhausted. In order to
@@ -467,7 +466,7 @@ class SolidMotor(Motor):
         t_span = t[0], t[-1]
 
         density = self.grain_density
-        grain_outer_radius = self.grain_outer_radius
+        rO = self.grain_outer_radius
         n_grain = self.grain_number
 
         # Define system of differential equations
@@ -476,20 +475,12 @@ class SolidMotor(Motor):
             volume_diff = self.mass_flow_rate(t) / (n_grain * density)
 
             # Compute state vector derivative
-            grain_inner_radius, grain_height = y
-            burn_area = (
-                2
-                * np.pi
-                * (
-                    grain_outer_radius**2
-                    - grain_inner_radius**2
-                    + grain_inner_radius * grain_height
-                )
-            )
-            grain_inner_radius_derivative = -volume_diff / burn_area
-            grain_height_derivative = -2 * grain_inner_radius_derivative
+            rI, h = y
+            burn_area = 2 * np.pi * (rO**2 - rI**2 + rI * h)
+            rI_dot = -volume_diff / burn_area
+            h_dot = -2 * rI_dot
 
-            return [grain_inner_radius_derivative, grain_height_derivative]
+            return [rI_dot, h_dot]
 
         # Define jacobian of the system of differential equations
         def geometry_jacobian(t, y):
@@ -497,35 +488,16 @@ class SolidMotor(Motor):
             volume_diff = self.mass_flow_rate(t) / (n_grain * density)
 
             # Compute jacobian
-            grain_inner_radius, grain_height = y
-            factor = volume_diff / (
-                2
-                * np.pi
-                * (
-                    grain_outer_radius**2
-                    - grain_inner_radius**2
-                    + grain_inner_radius * grain_height
-                )
-                ** 2
-            )
-            inner_radius_derivative_wrt_inner_radius = factor * (
-                grain_height - 2 * grain_inner_radius
-            )
-            inner_radius_derivative_wrt_height = factor * grain_inner_radius
-            height_derivative_wrt_inner_radius = (
-                -2 * inner_radius_derivative_wrt_inner_radius
-            )
-            height_derivative_wrt_height = -2 * inner_radius_derivative_wrt_height
+            rI, h = y
+            factor = volume_diff / (2 * np.pi * (rO**2 - rI**2 + rI * h) ** 2)
+            drI_dot_drI = factor * (h - 2 * rI)
+            drI_dot_dh = factor * rI
+            dh_dot_drI = -2 * drI_dot_drI
+            dh_dot_dh = -2 * drI_dot_dh
 
-            return [
-                [
-                    inner_radius_derivative_wrt_inner_radius,
-                    inner_radius_derivative_wrt_height,
-                ],
-                [height_derivative_wrt_inner_radius, height_derivative_wrt_height],
-            ]
+            return [[drI_dot_drI, drI_dot_dh], [dh_dot_drI, dh_dot_dh]]
 
-        def terminate_burn(t, y):  # pylint: disable=unused-argument
+        def terminate_burn(t, y):
             end_function = (self.grain_outer_radius - y[0]) * y[1]
             return end_function
 
@@ -563,6 +535,8 @@ class SolidMotor(Motor):
         )
 
         reset_funcified_methods(self)
+
+        return None
 
     @funcify_method("Time (s)", "burn area (m²)")
     def burn_area(self):
@@ -733,8 +707,11 @@ class SolidMotor(Motor):
         """Prints out basic data about the SolidMotor."""
         self.prints.all()
         self.plots.thrust()
+        return None
 
     def all_info(self):
         """Prints out all data and graphs available about the SolidMotor."""
         self.prints.all()
         self.plots.all()
+
+        return None

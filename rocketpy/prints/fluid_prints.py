@@ -24,6 +24,7 @@ class _FluidPrints:
         None
         """
         self.fluid = fluid
+        return None
 
     def all(self):
         """Prints out all data available about the Fluid.
@@ -32,3 +33,5 @@ class _FluidPrints:
         -------
         None
         """
+
+        return None

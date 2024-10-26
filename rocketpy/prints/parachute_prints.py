@@ -25,6 +25,8 @@ class _ParachutePrints:
         """
         self.parachute = parachute
 
+        return None
+
     def trigger(self):
         """Prints trigger information.
 
@@ -51,6 +53,8 @@ class _ParachutePrints:
             f"Time between ejection signal is triggered and the parachute is fully opened: {self.parachute.lag:.1f} s\n"
         )
 
+        return None
+
     def noise(self):
         # Not implemented yet
         pass
@@ -64,6 +68,8 @@ class _ParachutePrints:
         """
 
         print("\nParachute Details\n")
-        print(str(self.parachute))
+        print(self.parachute.__str__())
         self.trigger()
         self.noise()
+
+        return None

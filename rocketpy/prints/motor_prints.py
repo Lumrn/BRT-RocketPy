@@ -24,6 +24,7 @@ class _MotorPrints:
         None
         """
         self.motor = motor
+        return None
 
     def motor_details(self):
         """Print Motor details.
@@ -34,12 +35,19 @@ class _MotorPrints:
         """
         print("Motor Details")
         print("Total Burning Time: " + str(self.motor.burn_out_time) + " s")
-        print(f"Total Propellant Mass: {self.motor.propellant_initial_mass:.3f} kg")
+        print(
+            "Total Propellant Mass: "
+            + "{:.3f}".format(self.motor.propellant_initial_mass)
+            + " kg"
+        )
         print(
             "Average Propellant Exhaust Velocity: "
-            f"{self.motor.exhaust_velocity.average(*self.motor.burn_time):.3f} m/s"
+            + "{:.3f}".format(
+                self.motor.exhaust_velocity.average(*self.motor.burn_time)
+            )
+            + " m/s"
         )
-        print(f"Average Thrust: {self.motor.average_thrust:.3f} N")
+        print("Average Thrust: " + "{:.3f}".format(self.motor.average_thrust) + " N")
         print(
             "Maximum Thrust: "
             + str(self.motor.max_thrust)
@@ -47,7 +55,8 @@ class _MotorPrints:
             + str(self.motor.max_thrust_time)
             + " s after ignition."
         )
-        print(f"Total Impulse: {self.motor.total_impulse:.3f} Ns\n")
+        print("Total Impulse: " + "{:.3f}".format(self.motor.total_impulse) + " Ns\n")
+        return None
 
     def all(self):
         """Prints out all data available about the Motor.
@@ -57,3 +66,4 @@ class _MotorPrints:
         None
         """
         self.motor_details()
+        return None

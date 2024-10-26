@@ -188,21 +188,21 @@ class Parachute:
 
         elif isinstance(trigger, (int, float)):
             # The parachute is deployed at a given height
-            def triggerfunc(p, h, y):  # pylint: disable=unused-argument
+            def triggerfunc(p, h, y):
                 # p = pressure considering parachute noise signal
                 # h = height above ground level considering parachute noise signal
                 # y = [x, y, z, vx, vy, vz, e0, e1, e2, e3, w1, w2, w3]
-                return y[5] < 0 and h < trigger
+                return True if y[5] < 0 and h < trigger else False
 
             self.triggerfunc = triggerfunc
 
         elif trigger.lower() == "apogee":
             # The parachute is deployed at apogee
-            def triggerfunc(p, h, y):  # pylint: disable=unused-argument
+            def triggerfunc(p, h, y):
                 # p = pressure considering parachute noise signal
                 # h = height above ground level considering parachute noise signal
                 # y = [x, y, z, vx, vy, vz, e0, e1, e2, e3, w1, w2, w3]
-                return y[5] < 0
+                return True if y[5] < 0 else False
 
             self.triggerfunc = triggerfunc
 
@@ -221,7 +221,10 @@ class Parachute:
         string
             String representation of Parachute class. It is human readable.
         """
-        return f"Parachute {self.name.title()} with a cd_s of {self.cd_s:.4f} m2"
+        return "Parachute {} with a cd_s of {:.4f} m2".format(
+            self.name.title(),
+            self.cd_s,
+        )
 
     def __repr__(self):
         """Representation method for the class, useful when debugging."""
@@ -234,7 +237,11 @@ class Parachute:
         """Prints information about the Parachute class."""
         self.prints.all()
 
+        return None
+
     def all_info(self):
         """Prints all information about the Parachute class."""
         self.info()
         # self.plots.all() # Parachutes still doesn't have plots
+
+        return None

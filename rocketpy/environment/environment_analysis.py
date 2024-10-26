@@ -2,7 +2,6 @@ import bisect
 import copy
 import datetime
 import json
-import warnings
 from collections import defaultdict
 from functools import cached_property
 
@@ -27,7 +26,7 @@ from .environment import Environment
 # TODO: the average_wind_speed_profile_by_hour and similar methods could be more abstract than currently are
 
 
-class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
+class EnvironmentAnalysis:
     """Class for analyzing the environment.
 
     List of properties currently implemented:
@@ -93,7 +92,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
           average max wind gust, and average day wind rose.
     """
 
-    def __init__(  # pylint: disable=too-many-statements
+    def __init__(
         self,
         start_date,
         end_date,
@@ -210,6 +209,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
                 forecast_args = forecast_args or {"type": "Forecast", "file": "GFS"}
                 env.set_atmospheric_model(**forecast_args)
                 self.forecast[hour] = env
+        return None
 
     # Private, auxiliary methods
 
@@ -244,6 +244,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
                 "Given the above errors, some methods may not work. Please run "
                 + "'pip install rocketpy[env_analysis]' to install extra requirements."
             )
+        return None
 
     def __init_surface_dictionary(self):
         # Create dictionary of file variable names to process surface data
@@ -425,6 +426,8 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             raise ValueError(
                 f"Latitude and longitude pair {(self.latitude, self.longitude)} is outside the grid available in the given file, which is defined by {(lat_array[0], lon_array[0])} and {(lat_array[-1], lon_array[-1])}."
             )
+        else:
+            return None
 
     def __localize_input_dates(self):
         if self.start_date.tzinfo is None:
@@ -442,7 +445,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
                     tf.timezone_at(lng=self.longitude, lat=self.latitude)
                 )
             except ImportError:
-                warnings.warning(  # pragma: no cover
+                print(
                     "'timezonefinder' not installed, defaulting to UTC."
                     + " Install timezonefinder to get local time zone."
                     + " To do so, run 'pip install timezonefinder'"
@@ -474,6 +477,8 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         }
         # Create a variable to store updated units when units are being updated
         self.updated_units = self.current_units.copy()
+
+        return None
 
     def __init_unit_system(self):
         """Initialize preferred units for output (SI, metric or imperial)."""
@@ -547,9 +552,10 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         # Update current units
         self.current_units = self.updated_units.copy()
 
+        return None
+
     # General properties
 
-    # pylint: disable=too-many-locals, too-many-statements
     @cached_property
     def __parse_pressure_level_data(self):
         """
@@ -636,9 +642,9 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             )
 
             # Check if date is within analysis range
-            if not self.start_date <= date_time < self.end_date:
+            if not (self.start_date <= date_time < self.end_date):
                 continue
-            if not self.start_hour <= date_time.hour < self.end_hour:
+            if not (self.start_hour <= date_time.hour < self.end_hour):
                 continue
             # Make sure keys exist
             if date_string not in dictionary:
@@ -808,7 +814,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         return self.__parse_pressure_level_data[4]
 
     @cached_property
-    def __parse_surface_data(self):  # pylint: disable=too-many-statements
+    def __parse_surface_data(self):
         """
         Parse surface data from a weather file.
         Currently only supports files from ECMWF.
@@ -877,9 +883,9 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             )
 
             # Check if date is within analysis range
-            if not self.start_date <= date_time < self.end_date:
+            if not (self.start_date <= date_time < self.end_date):
                 continue
-            if not self.start_hour <= date_time.hour < self.end_hour:
+            if not (self.start_hour <= date_time.hour < self.end_hour):
                 continue
 
             # Make sure keys exist
@@ -993,11 +999,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         converted_dict = copy.deepcopy(self.original_pressure_level_data)
 
         # Loop through dates
-        for (
-            date
-        ) in (
-            self.original_pressure_level_data
-        ):  # pylint: disable=consider-using-dict-items
+        for date in self.original_pressure_level_data:
             # Loop through hours
             for hour in self.original_pressure_level_data[date]:
                 # Loop through variables
@@ -1059,9 +1061,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         converted_dict = copy.deepcopy(self.original_surface_data)
 
         # Loop through dates
-        for (
-            date
-        ) in self.original_surface_data:  # pylint: disable=consider-using-dict-items
+        for date in self.original_surface_data:
             # Loop through hours
             for hour in self.original_surface_data[date]:
                 # Loop through variables
@@ -1090,7 +1090,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             List with all the hours available in the dataset.
         """
         hours = list(
-            set(  # pylint: disable=consider-using-set-comprehension
+            set(
                 [
                     int(hour)
                     for day_dict in self.converted_surface_data.values()
@@ -1275,7 +1275,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             List with total precipitation for each day in the dataset.
         """
         return [
-            sum(day_dict[hour]["total_precipitation"] for hour in day_dict.keys())
+            sum([day_dict[hour]["total_precipitation"] for hour in day_dict.keys()])
             for day_dict in self.converted_surface_data.values()
         ]
 
@@ -1514,9 +1514,9 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             Record maximum wind speed at surface level.
         """
         max_speed = float("-inf")
-        for speeds in self.surface_wind_speed_by_hour.values():
-            speed = max(speeds)
-            if speed > max_speed:  # pylint: disable=consider-using-max-builtin
+        for hour in self.surface_wind_speed_by_hour.keys():
+            speed = max(self.surface_wind_speed_by_hour[hour])
+            if speed > max_speed:
                 max_speed = speed
         return max_speed
 
@@ -1532,9 +1532,9 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             Record minimum wind speed at surface level.
         """
         min_speed = float("inf")
-        for speeds in self.surface_wind_speed_by_hour.values():
-            speed = min(speeds)
-            if speed < min_speed:  # pylint: disable=consider-using-min-builtin
+        for hour in self.surface_wind_speed_by_hour.keys():
+            speed = max(self.surface_wind_speed_by_hour[hour])
+            if speed < min_speed:
                 min_speed = speed
         return min_speed
 
@@ -2134,7 +2134,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
     # Pressure level data
 
     @cached_property
-    def altitude_AGL_range(self):  # pylint: disable=invalid-name
+    def altitude_AGL_range(self):
         """The altitude range for the pressure level data. The minimum altitude
         is always 0, and the maximum altitude is the maximum altitude of the
         pressure level data, or the maximum expected altitude if it is set.
@@ -2147,7 +2147,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             is the minimum altitude, and the second element is the maximum.
         """
         min_altitude = 0
-        if self.max_expected_altitude is None:
+        if self.max_expected_altitude == None:
             max_altitudes = [
                 np.max(day_dict[hour]["wind_speed"].source[-1, 0])
                 for day_dict in self.original_pressure_level_data.values()
@@ -2159,7 +2159,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         return min_altitude, max_altitude
 
     @cached_property
-    def altitude_list(self, points=200):  # pylint: disable=property-with-parameters
+    def altitude_list(self, points=200):
         """A list of altitudes, from 0 to the maximum altitude of the pressure
         level data, or the maximum expected altitude if it is set. The list is
         cached so that the computation is only done once. Units are kept as they
@@ -2583,8 +2583,11 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             Maximum average temperature.
         """
         max_temp = float("-inf")
-        for temp_profile in self.average_temperature_profile_by_hour.values():
-            max_temp = max(max_temp, np.max(temp_profile[0]))
+        for hour in self.average_temperature_profile_by_hour.keys():
+            max_temp = max(
+                max_temp,
+                np.max(self.average_temperature_profile_by_hour[hour][0]),
+            )
         return max_temp
 
     @cached_property
@@ -2600,8 +2603,11 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             Minimum average temperature.
         """
         min_temp = float("inf")
-        for temp_profile in self.average_temperature_profile_by_hour.values():
-            min_temp = min(min_temp, np.min(temp_profile[0]))
+        for hour in self.average_temperature_profile_by_hour.keys():
+            min_temp = min(
+                min_temp,
+                np.min(self.average_temperature_profile_by_hour[hour][0]),
+            )
         return min_temp
 
     @cached_property
@@ -2618,8 +2624,11 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             Maximum average wind speed.
         """
         max_wind_speed = float("-inf")
-        for wind_speed_profile in self.average_wind_speed_profile_by_hour.values():
-            max_wind_speed = max(max_wind_speed, np.max(wind_speed_profile[0]))
+        for hour in self.average_wind_speed_profile_by_hour.keys():
+            max_wind_speed = max(
+                max_wind_speed,
+                np.max(self.average_wind_speed_profile_by_hour[hour][0]),
+            )
         return max_wind_speed
 
     # Pressure level data - Average values
@@ -2763,6 +2772,7 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
 
         self.prints.all()
         self.plots.info()
+        return None
 
     def all_info(self):
         """Prints out all data and graphs available.
@@ -2774,6 +2784,8 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
 
         self.prints.all()
         self.plots.all()
+
+        return None
 
     def export_mean_profiles(self, filename="export_env_analysis"):
         """
@@ -2796,30 +2808,30 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         flipped_wind_x_dict = {}
         flipped_wind_y_dict = {}
 
-        for hour, temp_profile in self.average_temperature_profile_by_hour.items():
+        for hour in self.average_temperature_profile_by_hour.keys():
             flipped_temperature_dict[hour] = np.column_stack(
-                (temp_profile[1], temp_profile[0])
+                (
+                    self.average_temperature_profile_by_hour[hour][1],
+                    self.average_temperature_profile_by_hour[hour][0],
+                )
             ).tolist()
-
-        for hour, pressure_profile in self.average_pressure_profile_by_hour.items():
             flipped_pressure_dict[hour] = np.column_stack(
-                (pressure_profile[1], pressure_profile[0])
+                (
+                    self.average_pressure_profile_by_hour[hour][1],
+                    self.average_pressure_profile_by_hour[hour][0],
+                )
             ).tolist()
-
-        for (
-            hour,
-            wind_x_profile,
-        ) in self.average_wind_velocity_x_profile_by_hour.items():
             flipped_wind_x_dict[hour] = np.column_stack(
-                (wind_x_profile[1], wind_x_profile[0])
+                (
+                    self.average_wind_velocity_x_profile_by_hour[hour][1],
+                    self.average_wind_velocity_x_profile_by_hour[hour][0],
+                )
             ).tolist()
-
-        for (
-            hour,
-            wind_y_profile,
-        ) in self.average_wind_velocity_y_profile_by_hour.items():
             flipped_wind_y_dict[hour] = np.column_stack(
-                (wind_y_profile[1], wind_y_profile[0])
+                (
+                    self.average_wind_velocity_y_profile_by_hour[hour][1],
+                    self.average_wind_velocity_y_profile_by_hour[hour][0],
+                )
             ).tolist()
 
         self.export_dictionary = {
@@ -2840,19 +2852,29 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
             "atmospheric_model_wind_velocity_y_profile": flipped_wind_y_dict,
         }
 
-        with open(filename + ".json", "w") as f:
-            f.write(
-                json.dumps(
-                    self.export_dictionary, sort_keys=False, indent=4, default=str
-                )
-            )
-        print(
-            f"Your Environment Analysis file was saved, check it out: {filename}.json\n"
-            "You can use it to set a `customAtmosphere` atmospheric model"
+        # Convert to json
+        f = open(filename + ".json", "w")
+
+        # write json object to file
+        f.write(
+            json.dumps(self.export_dictionary, sort_keys=False, indent=4, default=str)
         )
 
+        # close file
+        f.close()
+        print(
+            "Your Environment Analysis file was saved, check it out: "
+            + filename
+            + ".json"
+        )
+        print(
+            "You can use it in the future by using the customAtmosphere atmospheric model."
+        )
+
+        return None
+
     @classmethod
-    def load(cls, filename="env_analysis_dict"):
+    def load(self, filename="env_analysis_dict"):
         """Load a previously saved Environment Analysis file.
         Example: EnvA = EnvironmentAnalysis.load("filename").
 
@@ -2864,9 +2886,10 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         Returns
         -------
         EnvironmentAnalysis object
+
         """
         jsonpickle = import_optional_dependency("jsonpickle")
-        encoded_class = open(filename).read()  # pylint: disable=consider-using-with
+        encoded_class = open(filename).read()
         return jsonpickle.decode(encoded_class)
 
     def save(self, filename="env_analysis_dict"):
@@ -2884,7 +2907,9 @@ class EnvironmentAnalysis:  # pylint: disable=too-many-public-methods
         """
         jsonpickle = import_optional_dependency("jsonpickle")
         encoded_class = jsonpickle.encode(self)
-        file = open(filename, "w")  # pylint: disable=consider-using-with
+        file = open(filename, "w")
         file.write(encoded_class)
         file.close()
         print("Your Environment Analysis file was saved, check it out: " + filename)
+
+        return None

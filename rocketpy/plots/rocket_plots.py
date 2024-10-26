@@ -32,6 +32,8 @@ class _RocketPlots:
 
         self.rocket = rocket
 
+        return None
+
     def total_mass(self):
         """Plots total mass of the rocket as a function of time.
 
@@ -41,6 +43,8 @@ class _RocketPlots:
         """
 
         self.rocket.total_mass()
+
+        return None
 
     def reduced_mass(self):
         """Plots reduced mass of the rocket as a function of time.
@@ -52,6 +56,8 @@ class _RocketPlots:
 
         self.rocket.reduced_mass()
 
+        return None
+
     def static_margin(self):
         """Plots static margin of the rocket as a function of time.
 
@@ -61,6 +67,8 @@ class _RocketPlots:
         """
 
         self.rocket.static_margin()
+
+        return None
 
     def stability_margin(self):
         """Plots static margin of the rocket as a function of time.
@@ -77,6 +85,8 @@ class _RocketPlots:
             disp_type="surface",
             alpha=1,
         )
+
+        return None
 
     def power_on_drag(self):
         """Plots power on drag of the rocket as a function of time.
@@ -95,6 +105,8 @@ class _RocketPlots:
 
         self.rocket.power_on_drag()
 
+        return None
+
     def power_off_drag(self):
         """Plots power off drag of the rocket as a function of time.
 
@@ -112,7 +124,8 @@ class _RocketPlots:
 
         self.rocket.power_off_drag()
 
-    # pylint: disable=too-many-statements
+        return None
+
     def drag_curves(self):
         """Plots power off and on drag curves of the rocket as a function of time.
 
@@ -138,7 +151,7 @@ class _RocketPlots:
                 [self.rocket.power_off_drag.source(x) for x in x_power_drag_off]
             )
 
-        _, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.plot(x_power_drag_on, y_power_drag_on, label="Power on Drag")
         ax.plot(
             x_power_drag_off, y_power_drag_off, label="Power off Drag", linestyle="--"
@@ -164,6 +177,8 @@ class _RocketPlots:
         self.rocket.thrust_to_weight.plot(
             lower=0, upper=self.rocket.motor.burn_out_time
         )
+
+        return None
 
     def draw(self, vis_args=None):
         """Draws the rocket in a matplotlib figure.
@@ -347,14 +362,16 @@ class _RocketPlots:
                 if isinstance(surface, Tail):
                     continue
                 # Else goes to the end of the surface
-                x_tube = [position, last_x]
-                y_tube = [radius, radius]
-                y_tube_negated = [-radius, -radius]
+                else:
+                    x_tube = [position, last_x]
+                    y_tube = [radius, radius]
+                    y_tube_negated = [-radius, -radius]
             else:
                 # If it is not the last surface, the tube goes to the beginning
                 # of the next surface
-                # [next_surface, next_position, next_radius, next_last_x]
-                next_position = drawn_surfaces[i + 1][1]
+                next_surface, next_position, next_radius, next_last_x = drawn_surfaces[
+                    i + 1
+                ]
                 x_tube = [last_x, next_position]
                 y_tube = [radius, radius]
                 y_tube_negated = [-radius, -radius]
@@ -401,9 +418,7 @@ class _RocketPlots:
 
         self._draw_nozzle_tube(last_radius, last_x, nozzle_position, ax, vis_args)
 
-    def _generate_motor_patches(
-        self, total_csys, ax, vis_args
-    ):  # pylint: disable=unused-argument
+    def _generate_motor_patches(self, total_csys, ax, vis_args):
         """Generates motor patches for drawing"""
         motor_patches = []
 
@@ -588,3 +603,5 @@ class _RocketPlots:
         print("\nThrust-to-Weight Plot")
         print("-" * 40)
         self.thrust_to_weight()
+
+        return None

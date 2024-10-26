@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from ..tools import generate_monte_carlo_ellipses, import_optional_dependency
+from ..tools import generate_monte_carlo_ellipses
 
 
 class _MonteCarloPlots:
@@ -9,7 +9,6 @@ class _MonteCarloPlots:
     def __init__(self, monte_carlo):
         self.monte_carlo = monte_carlo
 
-    # pylint: disable=too-many-statements
     def ellipses(
         self,
         image=None,
@@ -43,16 +42,20 @@ class _MonteCarloPlots:
         None
         """
 
-        imageio = import_optional_dependency("imageio")
-
         # Import background map
         if image is not None:
             try:
-                img = imageio.imread(image)
-            except FileNotFoundError as e:
+                from imageio import imread
+
+                img = imread(image)
+            except ImportError:
+                raise ImportError(
+                    "The 'imageio' package is required to add background images. Please install it."
+                )
+            except FileNotFoundError:
                 raise FileNotFoundError(
                     "The image file was not found. Please check the path."
-                ) from e
+                )
 
         impact_ellipses, apogee_ellipses, apogee_x, apogee_y, impact_x, impact_y = (
             generate_monte_carlo_ellipses(self.monte_carlo.results)

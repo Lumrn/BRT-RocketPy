@@ -145,6 +145,7 @@ class Tank(ABC):
         Function
             Mass of the tank as a function of time. Units in kg.
         """
+        pass
 
     @property
     @abstractmethod
@@ -159,6 +160,7 @@ class Tank(ABC):
         Function
             Net mass flow rate of the tank as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -173,6 +175,7 @@ class Tank(ABC):
         Function
             Volume of the fluid as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -185,6 +188,7 @@ class Tank(ABC):
         Function
             Volume of the liquid as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -197,6 +201,7 @@ class Tank(ABC):
         Function
             Volume of the gas as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -211,6 +216,7 @@ class Tank(ABC):
         Function
             Height of the ullage as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -225,6 +231,7 @@ class Tank(ABC):
         Function
             Height of the ullage as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -237,6 +244,7 @@ class Tank(ABC):
         Function
             Mass of the liquid as a function of time.
         """
+        pass
 
     @property
     @abstractmethod
@@ -249,6 +257,7 @@ class Tank(ABC):
         Function
             Mass of the gas as a function of time.
         """
+        pass
 
     @funcify_method("Time (s)", "Center of mass of liquid (m)")
     def liquid_center_of_mass(self):
@@ -504,7 +513,7 @@ class MassFlowRateBasedTank(Tank):
         gas_mass_flow_rate_in,
         liquid_mass_flow_rate_out,
         gas_mass_flow_rate_out,
-        discretize=100,
+        discretize=15978,
     ):
         """Initializes the MassFlowRateBasedTank class.
 
@@ -600,8 +609,7 @@ class MassFlowRateBasedTank(Tank):
         )
 
         # Discretize input flow if needed
-        if discretize:
-            self.discretize_flow()
+        self.discretize_flow() if discretize else None
 
         # Check if the tank is overfilled or underfilled
         self._check_volume_bounds()
@@ -631,7 +639,7 @@ class MassFlowRateBasedTank(Tank):
         Function
             Mass of the liquid as a function of time.
         """
-        liquid_flow = self.net_liquid_flow_rate.integral_function()
+        liquid_flow = self.net_liquid_flow_rate.integral_function(datapoints=self.discretize)
         liquid_mass = self.initial_liquid_mass + liquid_flow
         if (liquid_mass < 0).any():
             raise ValueError(
@@ -655,7 +663,7 @@ class MassFlowRateBasedTank(Tank):
         Function
             Mass of the gas as a function of time.
         """
-        gas_flow = self.net_gas_flow_rate.integral_function()
+        gas_flow = self.net_gas_flow_rate.integral_function(datapoints=self.discretize)
         gas_mass = self.initial_gas_mass + gas_flow
         if (gas_mass < -1e-6).any():  # -1e-6 is to avoid numerical errors
             raise ValueError(
@@ -681,7 +689,7 @@ class MassFlowRateBasedTank(Tank):
         Function
             Net liquid mass flow rate of the tank as a function of time.
         """
-        return self.liquid_mass_flow_rate_in - self.liquid_mass_flow_rate_out
+        return self.liquid_mass_flow_rate_in + self.liquid_mass_flow_rate_out
 
     @funcify_method("Time (s)", "gas mass flow rate (kg/s)", extrapolation="zero")
     def net_gas_flow_rate(self):
@@ -735,6 +743,7 @@ class MassFlowRateBasedTank(Tank):
         Function
             Volume of the liquid as a function of time.
         """
+        print("Computing liquid volume")
         return self.liquid_mass / self.liquid.density
 
     @funcify_method("Time (s)", "Volume (m³)")
@@ -747,7 +756,8 @@ class MassFlowRateBasedTank(Tank):
         Function
             Volume of the gas as a function of time.
         """
-        return self.gas_mass / self.gas.density
+        print("Start computing volume")
+        return self.gas_mass / self.gas.density # changed from self.gas.density
 
     @funcify_method("Time (s)", "Height (m)")
     def liquid_height(self):
@@ -761,6 +771,7 @@ class MassFlowRateBasedTank(Tank):
         Function
             Height of the ullage as a function of time.
         """
+
         liquid_height = self.geometry.inverse_volume.compose(self.liquid_volume)
         diff_bt = liquid_height - self.geometry.bottom
         diff_up = liquid_height - self.geometry.top
@@ -816,6 +827,8 @@ class MassFlowRateBasedTank(Tank):
         """Discretizes the mass flow rate inputs according to the flux time and
         the discretize parameter.
         """
+        self.liquid.density.set_discrete(*self.flux_time, self.discretize)
+        self.gas.density.set_discrete(*self.flux_time, self.discretize)
         self.liquid_mass_flow_rate_in.set_discrete(*self.flux_time, self.discretize)
         self.gas_mass_flow_rate_in.set_discrete(*self.flux_time, self.discretize)
         self.liquid_mass_flow_rate_out.set_discrete(*self.flux_time, self.discretize)
@@ -882,8 +895,7 @@ class UllageBasedTank(Tank):
         self.ullage = Function(ullage, "Time (s)", "Volume (m³)", "linear")
 
         # Discretize input if needed
-        if discretize:
-            self.discretize_ullage()
+        self.discretize_ullage() if discretize else None
 
         # Check if the tank is overfilled or underfilled
         self._check_volume_bounds()
@@ -1076,8 +1088,8 @@ class LevelBasedTank(Tank):
         # Define liquid level function
         self.liquid_level = Function(liquid_height, "Time (s)", "height (m)", "linear")
 
-        if discretize:
-            self.discretize_liquid_height()
+        # Discretize input if needed
+        self.discretize_liquid_height() if discretize else None
 
         # Check if the tank is overfilled or underfilled
         self._check_height_bounds()
@@ -1291,8 +1303,8 @@ class MassBasedTank(Tank):
         self.liquid_mass = Function(liquid_mass, "Time (s)", "Mass (kg)", "linear")
         self.gas_mass = Function(gas_mass, "Time (s)", "Mass (kg)", "linear")
 
-        if discretize:
-            self.discretize_masses()
+        # Discretize input if needed
+        self.discretize_masses() if discretize else None
 
         # Check if the tank is overfilled or underfilled
         self._check_volume_bounds()

@@ -2,14 +2,14 @@
 Monte Carlo Simulation Module for RocketPy
 
 This module defines the `MonteCarlo` class, which is used to perform Monte Carlo
-simulations of rocket flights. The Monte Carlo simulation is a powerful tool for
-understanding the variability and uncertainty in the performance of rocket flights
+simulations of rocket flights. The Monte Carlo simulation is a powerful tool for 
+understanding the variability and uncertainty in the performance of rocket flights 
 by running multiple simulations with varied input parameters.
 
 Notes
 -----
-This module is still under active development, and some features or attributes may
-change in future versions. Users are encouraged to check for updates and read the
+This module is still under active development, and some features or attributes may 
+change in future versions. Users are encouraged to check for updates and read the 
 latest documentation.
 """
 
@@ -79,9 +79,7 @@ class MonteCarlo:
         spent waiting for I/O operations or other processes to complete.
     """
 
-    def __init__(
-        self, filename, environment, rocket, flight, export_list=None
-    ):  # pylint: disable=too-many-statements
+    def __init__(self, filename, environment, rocket, flight, export_list=None):
         """
         Initialize a MonteCarlo object.
 
@@ -148,10 +146,7 @@ class MonteCarlo:
         except FileNotFoundError:
             self._error_file = f"{filename}.errors.txt"
 
-    # pylint: disable=consider-using-with
-    def simulate(
-        self, number_of_simulations, append=False
-    ):  # pylint: disable=too-many-statements
+    def simulate(self, number_of_simulations, append=False):
         """
         Runs the Monte Carlo simulation and saves all data.
 
@@ -359,7 +354,7 @@ class MonteCarlo:
             for export_item in self.export_list
         }
 
-        input_file.write(json.dumps(inputs_dict, cls=RocketPyEncoder) + "\n")
+        #input_file.write(json.dumps(inputs_dict, cls=RocketPyEncoder) + "\n") TODO: fin
         output_file.write(json.dumps(results, cls=RocketPyEncoder) + "\n")
 
     def __check_export_list(self, export_list):
@@ -397,10 +392,10 @@ class MonteCarlo:
                 "lateral_surface_wind",
             }
         )
-        # NOTE: this list needs to be updated with Flight numerical properties
-        #       example: You added the property 'inclination' to Flight.
-        #       But don't add other types.
-        can_be_exported = set(
+        # NOTE: exportables needs to be updated with Flight numerical properties
+        #       example: You added the property 'inclination' to Flight, so you may
+        #       need to add it to exportables as well. But don't add other types.
+        exportables = set(
             {
                 "inclination",
                 "heading",
@@ -456,7 +451,7 @@ class MonteCarlo:
                     raise TypeError("Variables in export_list must be strings.")
 
                 # Checks if attribute is not valid
-                if attr not in can_be_exported:
+                if attr not in exportables:
                     raise ValueError(
                         f"Attribute '{attr}' can not be exported. Check export_list."
                     )
@@ -765,12 +760,12 @@ class MonteCarlo:
 
     # Export methods
 
-    def export_ellipses_to_kml(  # pylint: disable=too-many-statements
+    def export_ellipses_to_kml(
         self,
         filename,
         origin_lat,
         origin_lon,
-        type="all",  # TODO: Don't use "type" as a parameter name, it's a reserved word  # pylint: disable=redefined-builtin
+        type="all",  # TODO: Don't use "type" as a parameter name, it's a reserved word
         resolution=100,
         color="ff0000ff",
     ):
@@ -819,12 +814,12 @@ class MonteCarlo:
         ) = generate_monte_carlo_ellipses(self.results)
         outputs = []
 
-        if type in ["all", "impact"]:
+        if type == "all" or type == "impact":
             outputs = outputs + generate_monte_carlo_ellipses_coordinates(
                 impact_ellipses, origin_lat, origin_lon, resolution=resolution
             )
 
-        if type in ["all", "apogee"]:
+        if type == "all" or type == "apogee":
             outputs = outputs + generate_monte_carlo_ellipses_coordinates(
                 apogee_ellipses, origin_lat, origin_lon, resolution=resolution
             )

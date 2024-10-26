@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from ..mathutils.function import Function, funcify_method
 from ..plots.fluid_plots import _FluidPlots
 from ..prints.fluid_prints import _FluidPrints
 
@@ -12,12 +13,28 @@ class Fluid:
     ----------
     name : str
         Name of the fluid.
-    density : float
-        Density of the fluid in kg/m³.
+    density : Function
+        Density of the fluid in kg/m³ over s.
     """
-
     name: str
-    density: float
+    density : Function
+
+    def __init__(self, name, density):
+        """Initialization method."""
+
+        if not isinstance(name, str):
+            raise ValueError("The name must be a string.")
+
+        # ... (Any other validation you need for the density)
+
+        self.name = name
+        self.density = Function(
+            density,
+            inputs="Time (s)",
+            outputs="Density (kg/m^3)",
+            interpolation="linear",
+            extrapolation="zero",
+        )
 
     def __post_init__(self):
         """Post initialization method.
@@ -38,6 +55,7 @@ class Fluid:
         # Initialize plots and prints object
         self.prints = _FluidPrints(self)
         self.plots = _FluidPlots(self)
+        return None
 
     def __repr__(self):
         """Representation method.
